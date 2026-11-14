@@ -4,5 +4,5 @@ RUN pip install --no-cache-dir torch==2.5.1 torchaudio==2.5.1 --index-url https:
 RUN pip install --no-cache-dir --index-url https://pypi.tuna.tsinghua.edu.cn/simple --timeout 30 demucs==4.0.1 fastapi==0.115.6 uvicorn==0.34.0 python-multipart==0.0.20 soundfile
 ENV OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 TORCH_HOME=/data/models
 WORKDIR /app
-COPY server.py /app/server.py
+COPY server.py chunked.py /app/
 CMD ["uvicorn","server:app","--host","0.0.0.0","--port","8080"]
