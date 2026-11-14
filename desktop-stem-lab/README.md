@@ -13,3 +13,5 @@
 安装：需Python3.13和FFmpeg，运行 `python3 -m venv .venv` 后 `.venv/bin/python -m pip install -r local-stems/requirements.txt`。
 模型/实现： https://github.com/facebookresearch/demucs （MIT）；下载器： https://github.com/yt-dlp/yt-dlp （Unlicense等，见项目说明）。
 MP3为音源转码，不能提升原始音质。当前采用CPU，尚未实现Apple GPU加速。
+
+导出命名统一为 `歌名 - 作者 - 人声.wav`、`歌名 - 作者 - 鼓.wav`、`歌名 - 作者 - 贝斯.wav`、`歌名 - 作者 - 其他乐器.wav`、`歌名 - 作者 - 完整音频.mp3`、`歌名 - 作者 - 四轨分轨.zip`。网页中“编辑歌名 / 作者”可修正信息；来源没有作者时显示未知作者，不猜填。实际导出文件位于任务目录 `exports/`，ZIP内也保留完整命名。
