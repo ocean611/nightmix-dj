@@ -17,10 +17,10 @@ async def process(jid):
   job['status']='processing'
   env=os.environ.copy();env['OMP_NUM_THREADS']='1'
   with (p/'process.log').open('w') as log:
-   proc=await asyncio.create_subprocess_exec('python','-m','demucs','-n','htdemucs','-d','cpu','-j','1','--shifts','0','--segment','2','--overlap','0.1','--out',str(p/'out'),str(p/'input.wav'),stdout=log,stderr=log,env=env)
-   try:code=await asyncio.wait_for(proc.wait(),3600)
+   proc=await asyncio.create_subprocess_exec('python','/app/chunked.py',str(p),stdout=log,stderr=log,env=env)
+   try:code=await asyncio.wait_for(proc.wait(),14400)
    except asyncio.TimeoutError:proc.kill();await proc.wait();raise RuntimeError('处理超时')
-  if code:raise RuntimeError('模型处理失败，请检查服务器日志')
+  if code:raise RuntimeError('服务器分轨进程中断（内存不足）' if code==-9 else '服务器分轨失败，请联系管理员检查日志')
   for stem in ['vocals','drums','bass','other']:
    src=p/'out/htdemucs/input'/f'{stem}.wav'
    if not src.exists():raise RuntimeError('分轨输出不完整')
