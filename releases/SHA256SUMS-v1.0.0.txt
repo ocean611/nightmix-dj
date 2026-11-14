@@ -1,0 +1,3 @@
+68a9edd2692913c1effd7df6912eef6e9033f2ca27e1961bcb92b096bc79cd39  nightmix-dj-studio-v1.0.0.zip
+49cdf4a56c98a20646dca78040adc6c174c9f44a400fccd37587ff7e5af31919  nightmix-stem-lab-portal-v1.0.0.zip
+0d9800571664a53340cee296999e0a50ddae530020db087ecf86ef04f0f0d83f  nightmix-stem-lab-macos-v1.0.0.zip

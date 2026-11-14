@@ -1,0 +1,1 @@
+{"name": "NIGHTMIX DJ Studio", "short_name": "NIGHTMIX", "id": "./", "start_url": "./", "scope": "./", "display": "fullscreen", "display_override": ["fullscreen", "standalone"], "background_color": "#090b10", "theme_color": "#090b10", "icons": [{"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]}
