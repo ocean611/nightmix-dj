@@ -1,27 +1,32 @@
 [
   {
-    "file": "impact.mp3",
-    "title": "Impact test",
-    "author": "cabled_mess",
-    "url": "https://freesound.org/people/cabled_mess/sounds/339694/",
-    "license": "CC0-1.0",
-    "sha256": "04ed728f86eef3b9748e0a4afb45a5393a3c1e34bdcb7d1ee12b67e0728977a0"
+    "file": "scratch-01.wav",
+    "source": "https://www.douyin.com/video/7696192318486908198",
+    "author": "不渴鲤鱼",
+    "title": "音效分享-029DJ唱片",
+    "start_seconds": 0,
+    "end_seconds": 2.4,
+    "processing": "Excerpt, 5ms fades, peak normalization; no claim of CC0 licensing",
+    "sha256": "00237c6ebfe8dfc681b601d2918075ea954eccb723d3df8aa0114c923d26524d"
   },
   {
-    "file": "sub.mp3",
-    "title": "SUB A# 2 secs.wav",
-    "author": "uzerx",
-    "url": "https://freesound.org/people/uzerx/sounds/63138/",
-    "license": "CC0-1.0",
-    "sha256": "64429ed2ad08f0a05795b77bb0461cead2e6039f7c79b73058eafb81c9f145c4"
+    "file": "scratch-02.wav",
+    "source": "https://www.douyin.com/video/7696192318486908198",
+    "author": "不渴鲤鱼",
+    "title": "音效分享-029DJ唱片",
+    "start_seconds": 2.889,
+    "end_seconds": 4.675,
+    "processing": "Excerpt, 5ms fades, peak normalization; no claim of CC0 licensing",
+    "sha256": "e3c2f50f82e97ddf093fc9ed614299d2c19306298b3accf6fe798e6f535cd8da"
   },
   {
-    "file": "crash.wav",
-    "title": "susCymb1_hit_fff1.wav",
-    "author": "Versilian Studios / VCSL contributors",
-    "url": "https://github.com/sgossner/VCSL",
-    "path": "Idiophones/Struck Idiophones/Suspended Cymbal 1/susCymb1_hit_fff1.wav",
-    "license": "CC0-1.0",
-    "sha256": "993ceb041adaad19c88042e9d6e66707c30eda6e44a5a263d68bb4a3cdb2ca02"
+    "file": "vinyl-stop.wav",
+    "source": "https://www.douyin.com/video/7696192318486908198",
+    "author": "不渴鲤鱼",
+    "title": "音效分享-029DJ唱片",
+    "start_seconds": 4.992,
+    "end_seconds": 6.825,
+    "processing": "Excerpt, 5ms fades, peak normalization; no claim of CC0 licensing",
+    "sha256": "b219fb606073d67d80681413eab4b90c5362d45f07aa6e1047fafaebaf95bd3b"
   }
 ]
