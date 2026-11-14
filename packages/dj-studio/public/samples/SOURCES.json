@@ -1,0 +1,27 @@
+[
+  {
+    "file": "impact.mp3",
+    "title": "Impact test",
+    "author": "cabled_mess",
+    "url": "https://freesound.org/people/cabled_mess/sounds/339694/",
+    "license": "CC0-1.0",
+    "sha256": "04ed728f86eef3b9748e0a4afb45a5393a3c1e34bdcb7d1ee12b67e0728977a0"
+  },
+  {
+    "file": "sub.mp3",
+    "title": "SUB A# 2 secs.wav",
+    "author": "uzerx",
+    "url": "https://freesound.org/people/uzerx/sounds/63138/",
+    "license": "CC0-1.0",
+    "sha256": "64429ed2ad08f0a05795b77bb0461cead2e6039f7c79b73058eafb81c9f145c4"
+  },
+  {
+    "file": "crash.wav",
+    "title": "susCymb1_hit_fff1.wav",
+    "author": "Versilian Studios / VCSL contributors",
+    "url": "https://github.com/sgossner/VCSL",
+    "path": "Idiophones/Struck Idiophones/Suspended Cymbal 1/susCymb1_hit_fff1.wav",
+    "license": "CC0-1.0",
+    "sha256": "993ceb041adaad19c88042e9d6e66707c30eda6e44a5a263d68bb4a3cdb2ca02"
+  }
+]

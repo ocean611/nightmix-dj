@@ -1,0 +1,8 @@
+These derived sampler sounds use CC0-1.0 recordings.
+License: https://creativecommons.org/publicdomain/zero/1.0/
+Original authors and URLs: see SOURCES.json.
+Drop Hit: cabled_mess Impact test + VCSL crash.
+Sub Drop: uzerx SUB A# 2 secs (not automatically tuned to the song key).
+Crash Hit and Reverse Crash: VCSL suspended cymbal, trimmed/faded/reversed.
+DOWN and IMPACT remain the original NIGHTMIX synthesized sounds.
+These are generic transition sounds, not samples extracted from any named commercial track.

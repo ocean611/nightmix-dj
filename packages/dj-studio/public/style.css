@@ -18,3 +18,28 @@ body{height:var(--stage-height,100dvh)!important}.deck .pitch{min-width:0}
 main,.perform-fullscreen main{margin:0 auto;width:100%;align-self:stretch;height:100%!important;overflow:hidden}.console{flex:1;min-height:0;height:100%}.deck,.mixer{height:100%;min-height:0}
 
 .pad-title button{min-height:20px;height:20px;padding:0 7px}
+
+/* Electric performance layout: sliders sit above transport, away from screen edges. */
+body{--wall-dim:.48}
+body[data-wall=carbon]:before{background-image:radial-gradient(ellipse at 12% 15%,#063848 0,transparent 52%),radial-gradient(ellipse at 92% 72%,#34165b 0,transparent 50%),linear-gradient(135deg,#080e19,#080914)}
+header{background:linear-gradient(100deg,#081820e8,#121026ed);border-bottom-color:#43557b;box-shadow:0 0 24px #2b8cab20}
+.logo{color:#07131b;background:#57ecff;box-shadow:0 0 20px #37e8ff45}
+.brand{letter-spacing:3px}.console{border-color:#425573;box-shadow:0 0 0 1px #794de320,0 15px 60px #0008,0 0 30px #3c72e51a;background:#0b1020d9}
+main,.perform-fullscreen main{padding:10px 12px calc(26px + env(safe-area-inset-bottom))!important}
+.deck{background:radial-gradient(ellipse at 30% 12%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 68%),linear-gradient(160deg,#121b2be8,#111322eb);grid-template-rows:22px 40px 22px minmax(32px,1fr) 20px 72px minmax(48px,1.5fr) 76px 40px 28px 34px 30px;gap:4px;padding:10px 12px 14px}
+.stems{grid-row:6;padding:6px 8px 4px;border:1px solid color-mix(in srgb,var(--accent) 30%,#26334b);border-radius:10px;background:#07111c99;overflow:visible}
+.stem-grid{height:100%;align-content:center}.stem-control{min-width:0}.stem-control button{min-height:26px}.stem-control input{height:30px!important;width:100%;margin:2px 0 0}
+.platter-area{grid-row:7}.tempo-pitch-panel{grid-row:8;gap:4px;padding:4px 6px;border:1px solid #344461;border-radius:10px;background:#09102099}
+.tempo-pitch-panel .pitch input,.key-control input{height:32px!important}.transport{grid-row:9}.pad-title{grid-row:10;height:28px}.pads{grid-row:11}.loop-row{grid-row:12}
+.cue-actions{display:flex;align-items:center;gap:6px}.cue-actions button{min-height:24px;height:24px;padding:0 9px;font-size:9px}.clearcue.on{background:#9b2855;border-color:#ff74ac;color:#fff;box-shadow:0 0 14px #ff4b9230}
+.pads button.set{background:color-mix(in srgb,var(--accent) 18%,#10192c);box-shadow:inset 0 0 14px color-mix(in srgb,var(--accent) 15%,transparent),0 0 10px color-mix(in srgb,var(--accent) 10%,transparent)}
+.platter{border-color:#41506a;box-shadow:0 0 0 2px #0a1020,0 0 24px color-mix(in srgb,var(--accent) 10%,transparent),inset 0 0 30px #000}.label-disc{box-shadow:0 0 0 7px #0005,0 0 25px color-mix(in srgb,var(--accent) 24%,transparent)}
+.transport .play{box-shadow:0 0 18px color-mix(in srgb,var(--accent) 20%,transparent)}
+.mixer{background:linear-gradient(180deg,#101b2ef0,#111526f0);padding-bottom:24px}.cross input,.master input{height:34px!important}.cross{padding-bottom:8px}.limiter{margin-top:12px;color:#76c9df}
+.sample-bank{height:66px;min-height:66px;gap:8px;background:linear-gradient(90deg,#08161ce8,#151126e8);border-bottom:1px solid #3a4b6b}.sampler-cell{width:118px;grid-template-rows:28px 28px}.sampler-cell input{height:28px!important;accent-color:#78dff7}.sampler-cell button{background:#19263b;border-color:#40577c;letter-spacing:.5px}.sample-bank .on{background:#6cecff;border-color:#a5f5ff;color:#071820;box-shadow:0 0 20px #43e9ff50}
+input[type=range]{touch-action:none;cursor:ew-resize}input[type=range][style*=vertical]{cursor:ns-resize}
+@media(max-height:740px){.deck{grid-template-rows:20px 32px 18px minmax(24px,1fr) 18px 64px minmax(30px,1fr) 64px 34px 24px 28px 26px;gap:3px;padding:8px 9px 10px}.stems{padding:3px 5px}.stem-control button{min-height:24px}.stem-control input{height:28px!important}.tempo-pitch-panel{padding:2px 4px;gap:2px}.tempo-pitch-panel .pitch input,.key-control input{height:28px!important}.pad-title{height:24px}.sample-bank{height:60px;min-height:60px}.sampler-cell{grid-template-rows:26px 26px}.sampler-cell input{height:26px!important}.mixer{padding-bottom:20px}.limiter{margin-top:5px;font-size:7px}.control{margin-top:3px}.master,.cross{margin-top:5px}.cross{padding-bottom:3px}.master input,.cross input{height:28px!important}}
+@media(max-width:900px){.sampler-cell{width:14.7%;max-width:114px}.sample-bank{gap:5px;padding-left:10px;padding-right:10px}.sample-bank>span{display:none}.sampler-cell button{font-size:8px;padding:0 3px}.deck{padding-left:7px;padding-right:7px}.stems{padding-left:4px;padding-right:4px}.cue-actions{gap:4px}.cue-actions button{padding:0 6px;font-size:8px}}
+@media(max-width:700px){main,.perform-fullscreen main{padding-left:7px!important;padding-right:7px!important}.deck{padding-left:5px;padding-right:5px}.stem-grid{gap:3px}.stems{padding-left:3px;padding-right:3px}.cue-actions button{padding:0 5px}}
+
+.pad-title>span{display:inline;color:#91abc5;font-size:9px;letter-spacing:1px}.clearcue{color:#efb9d3;background:#2a1d33;border-color:#63425f}
