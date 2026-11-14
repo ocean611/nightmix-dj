@@ -17,7 +17,7 @@ async def process(jid):
   job['status']='processing'
   env=os.environ.copy();env['OMP_NUM_THREADS']='1'
   with (p/'process.log').open('w') as log:
-   proc=await asyncio.create_subprocess_exec('python','-m','demucs','-n','htdemucs','-d','cpu','-j','1','--shifts','0','--segment','4','--overlap','0.1','--out',str(p/'out'),str(p/'input.wav'),stdout=log,stderr=log,env=env)
+   proc=await asyncio.create_subprocess_exec('python','-m','demucs','-n','htdemucs','-d','cpu','-j','1','--shifts','0','--segment','2','--overlap','0.1','--out',str(p/'out'),str(p/'input.wav'),stdout=log,stderr=log,env=env)
    try:code=await asyncio.wait_for(proc.wait(),3600)
    except asyncio.TimeoutError:proc.kill();await proc.wait();raise RuntimeError('处理超时')
   if code:raise RuntimeError('模型处理失败，请检查服务器日志')
@@ -42,13 +42,13 @@ async def upload(file:UploadFile,x_stem_key:str=Header(default='')):
     size+=len(data)
     if size>60*1048576:raise HTTPException(413,'文件不能超过 60 MB')
     f.write(data)
-  proc=await asyncio.create_subprocess_exec('ffmpeg','-v','error','-nostdin','-i',str(p/'source'),'-t','601','-ar','44100','-ac','2',str(p/'input.wav'),stdout=asyncio.subprocess.DEVNULL,stderr=asyncio.subprocess.DEVNULL)
+  proc=await asyncio.create_subprocess_exec('ffmpeg','-v','error','-nostdin','-i',str(p/'source'),'-t','181','-ar','44100','-ac','2',str(p/'input.wav'),stdout=asyncio.subprocess.DEVNULL,stderr=asyncio.subprocess.DEVNULL)
   try:code=await asyncio.wait_for(proc.wait(),90)
   except asyncio.TimeoutError:proc.kill();await proc.wait();raise HTTPException(400,'解码超时')
   if code:raise HTTPException(400,'无法解码此音频')
   import wave
   with wave.open(str(p/'input.wav')) as w:duration=w.getnframes()/w.getframerate()
-  if duration>600:raise HTTPException(400,'单曲不超过 10 分钟')
+  if duration>180:raise HTTPException(400,'单曲不超过 3 分钟')
   token=secrets.token_urlsafe(24);jobs[jid]={'status':'queued','token':token,'duration':duration};asyncio.create_task(process(jid));return {'id':jid,'token':token}
  except Exception:
   lock.release();shutil.rmtree(p,ignore_errors=True);raise
