@@ -1,0 +1,75 @@
+export function installBeatWorkspace({decks,audio,getContext,liveParam,toast}){
+ const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)],mod=(n,m)=>((n%m)+m)%m;
+ let masterDeck='A',viewBeats=8,workspace='performance',lastFrame=0;
+ const main=$('main'),mixer=$('.mixer'),bank=$('.sample-bank');
+ const tabs=document.createElement('nav');tabs.className='workspace-tabs';tabs.setAttribute('aria-label','工作台页面');tabs.innerHTML=[['performance','打碟'],['mix','混音'],['stems','分轨'],['cues','热 Cue'],['fx','音效']].map(([id,name])=>`<button data-workspace-page="${id}" aria-pressed="false">${name}</button>`).join('')+'<span class="workspace-hint">DUAL DECK / BEAT ALIGN</span>';bank.after(tabs);
+ const footer=document.createElement('div');footer.className='performance-footer';footer.append($('.master'),$('.cross'));const phase=document.createElement('div');phase.className='phase-status';phase.innerHTML='<span>网格相位</span><strong>—</strong><small>A / B</small>';footer.append(phase);main.append(footer);
+ const center=document.createElement('section');center.className='align-center';center.setAttribute('aria-label','双音轨对齐');center.innerHTML='<div class="align-head"><div class="align-title">BEAT ALIGN <button class="grid-edit">网格</button></div><div class="align-master"><button data-master="A" aria-label="A 作为参考主拍">A 主拍</button><button data-master="B" aria-label="B 作为参考主拍">B 主拍</button><button class="zoom-out" aria-label="波形缩小">−</button><output>8 拍</output><button class="zoom-in" aria-label="波形放大">＋</button></div></div><canvas class="align-canvas" tabindex="0" aria-label="双音轨节拍对齐波形，左右选择唱盘，上下方向键微移"></canvas><div class="align-foot">'+decks.map(d=>`<div class="nudge-group"><span>${d.id}</span><button data-nudge="${d.id}:-1" aria-label="${d.id} 按住暂时减速">−</button><button data-nudge="${d.id}:1" aria-label="${d.id} 按住暂时加速">＋</button><small class="lane-beat" data-lane="${d.id}">001.1</small></div>`).join('')+'</div>';mixer.append(center);
+ const canvas=$('.align-canvas',center),g=canvas.getContext('2d');
+ function position(d,now=performance.now()){
+  let p=d.pos||0;if(d.playing&&!d.scratching&&d.positionStamp)p+=Math.max(0,Math.min(.1,(now-d.positionStamp)/1000))*d.rate*(1+(d.bend||0));
+  if(d.loop&&p>=d.loop[1])p=d.loop[0]+mod(p-d.loop[0],d.loop[1]-d.loop[0]);return Math.max(0,Math.min(d.duration||0,p));
+ }
+ function analyzeOffset(b,bpm){
+  if(!b?.length||!bpm)return {offset:0,confidence:0};const data=b.getChannelData(0),sr=b.sampleRate,hop=Math.max(1,Math.round(sr*.005)),n=Math.min(Math.floor(data.length/hop),9000),bins=new Float64Array(128),period=60/bpm;let prev=0,total=0;
+  for(let i=0;i<n;i++){let energy=0,count=0;for(let j=i*hop;j<Math.min(data.length,(i+1)*hop);j+=8){energy+=data[j]*data[j];count++}energy=Math.sqrt(energy/Math.max(1,count));const onset=Math.max(0,energy-prev*.95);prev=energy;if(onset<.00001)continue;const phase=mod((i+.5)*hop/sr,period)/period*128,k=Math.round(phase)%128;bins[k]+=onset;bins[(k+1)%128]+=onset*.5;bins[(k+127)%128]+=onset*.5;total+=onset*2}
+  let best=0;for(let i=1;i<128;i++)if(bins[i]>bins[best])best=i;return {offset:best/128*period,confidence:total?bins[best]/total:0};
+ }
+ function ensureGrid(d){
+  const b=d.stemBuffers?.[1]||d.waveBuffer||d.buffer;if(!b)return;
+  if(d.gridBuffer!==b){d.gridBuffer=b;d.gridManual=false;d.gridTempo=null;d.alignArrays=(d.stemBuffers||[d.waveBuffer||d.buffer]).map(x=>x.getChannelData(0));d.alignRate=b.sampleRate}
+  if(d.gridTempo!==d.baseBpm){if(!d.gridManual){const grid=analyzeOffset(b,d.baseBpm);d.gridOffset=grid.offset;d.gridConfidence=grid.confidence}d.gridTempo=d.baseBpm}
+ }
+ function onTrackLoaded(d){d.gridBuffer=null;d.gridManual=false;ensureGrid(d);if(d.stemBuffers){const arrays=d.alignArrays,len=d.stemBuffers[0].length,stride=Math.max(1,Math.floor(len/420));d.peaks=new Float32Array(420);for(let x=0;x<420;x++){let peak=0;for(let j=x*stride;j<Math.min(len,(x+1)*stride);j+=Math.max(1,Math.floor(stride/150))){let value=0;for(const a of arrays)value+=a[j]||0;peak=Math.max(peak,Math.abs(value))}d.peaks[x]=Math.min(1,peak)}}}
+ function onTempoChanged(d){ensureGrid(d)}
+ function updateMaster(){for(const b of $$('[data-master]',center))b.classList.toggle('on',b.dataset.master===masterDeck)}
+ $$('[data-master]',center).forEach(b=>b.onclick=()=>{masterDeck=b.dataset.master;updateMaster()});updateMaster();
+ function zoom(change){viewBeats=Math.max(4,Math.min(32,viewBeats*change));$('output',center).textContent=viewBeats+' 拍'}$('.zoom-in',center).onclick=()=>zoom(.5);$('.zoom-out',center).onclick=()=>zoom(2);
+ function applyRate(d){if(!d.node)return;const rate=d.rate*(1+(d.bend||0));d.node.port.postMessage({type:'rate',value:rate});if(d.pitchNode)liveParam(d.pitchNode.parameters.get('playbackRate'),rate)}
+ const bendResets=[];
+ for(const button of $$('[data-nudge]',center)){
+  const [id,direction]=button.dataset.nudge.split(':'),d=decks.find(x=>x.id===id);let pointer=null;
+  const start=()=>{if(!d.buffer)return toast('请先载入 '+id+' 碟');d.bend=Number(direction)*.035;applyRate(d);button.classList.add('on')};
+  const end=()=>{pointer=null;d.bend=0;applyRate(d);button.classList.remove('on')};bendResets.push(end);
+  button.onpointerdown=e=>{if(pointer!==null||(e.pointerType==='mouse'&&e.button!==0))return;e.preventDefault();pointer=e.pointerId;button.setPointerCapture(pointer);if(getContext()?.state==='running')start();else audio().then(()=>{if(pointer===e.pointerId)start()}).catch(e=>toast(e.message))};
+  button.onpointerup=button.onpointercancel=button.onlostpointercapture=e=>{if(pointer===e.pointerId)end()};
+  button.onkeydown=e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat){e.preventDefault();start()}};button.onkeyup=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();end()}};button.onblur=()=>{if(pointer===null)end()};
+ }
+ window.addEventListener('blur',()=>bendResets.forEach(fn=>fn()));
+ function setWorkspace(id){workspace=id;document.body.dataset.workspace=id;$$('[data-workspace-page]',tabs).forEach(b=>{b.classList.toggle('on',b.dataset.workspacePage===id);b.setAttribute('aria-pressed',String(b.dataset.workspacePage===id))});bendResets.forEach(fn=>fn())}
+ $$('[data-workspace-page]',tabs).forEach(b=>b.onclick=()=>setWorkspace(b.dataset.workspacePage));setWorkspace('performance');
+ function phaseOf(d,now){ensureGrid(d);return mod((position(d,now)-(d.gridOffset||0))/(60/d.baseBpm),1)}
+ function sync(d){const other=decks[1-d.index];if(!d.buffer||!other.buffer)return toast('先给两个唱盘载入音乐');ensureGrid(d);ensureGrid(other);const now=performance.now(),p=position(d,now),target=phaseOf(other,now),own=phaseOf(d,now),delta=mod(target-own+.5,1)-.5;d.setRate(other.bpm/d.baseBpm);let seek=p+delta*60/d.baseBpm;if(seek<0)seek+=60/d.baseBpm;if(seek>d.duration-.001)seek-=60/d.baseBpm;d.seek(seek);masterDeck=other.id;updateMaster();toast('已匹配 '+other.id+' 碟速度与网格相位')}
+ const waveDrags=new Map();let selectedDeck=0;
+ function pixelScale(){const master=decks.find(d=>d.id===masterDeck),bpm=master?.buffer?master.bpm:120;return canvas.getBoundingClientRect().height/(viewBeats*60/bpm)}
+ canvas.onpointerdown=e=>{if(e.pointerType==='mouse'&&e.button!==0)return;const r=canvas.getBoundingClientRect();selectedDeck=e.clientX-r.left<r.width/2?0:1;const d=decks[selectedDeck];if(!d.buffer||[...waveDrags.values()].some(x=>x.d===d))return;waveDrags.set(e.pointerId,{y:e.clientY,d});canvas.setPointerCapture(e.pointerId);e.preventDefault()};
+ canvas.onpointermove=e=>{const drag=waveDrags.get(e.pointerId);if(!drag)return;e.preventDefault();drag.d.seek(position(drag.d)+(e.clientY-drag.y)/pixelScale()*drag.d.rate);drag.y=e.clientY};
+ canvas.onpointerup=canvas.onpointercancel=canvas.onlostpointercapture=e=>waveDrags.delete(e.pointerId);
+ canvas.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();selectedDeck=e.key==='ArrowLeft'?0:1}else if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();const d=decks[selectedDeck];d.seek(position(d)+(e.key==='ArrowDown'?1:-1)*(e.shiftKey ? 0.1 : 0.01))}};
+ const dialog=document.createElement('dialog');dialog.className='grid-dialog';dialog.innerHTML='<button class="close">✕</button><h2>BEAT GRID</h2><div class="grid-decks">'+decks.map(d=>`<section data-grid-deck="${d.id}"><h3>${d.id} / 网格校正</h3><label>BPM<input data-bpm type="number" min="40" max="240" step=".01" aria-label="${d.id} 网格 BPM"></label><label>第一拍位置（秒）<input data-offset type="number" step=".001" aria-label="${d.id} 第一拍位置"></label><div class="grid-row"><button data-shift="-.01">−10 ms</button><button data-shift=".01">＋10 ms</button><button data-tap>TAP</button></div><button data-first>此处设为第一拍</button><div class="grid-row"><button data-apply>应用网格</button><button data-auto>重新估算</button></div><span data-state>AUTO</span></section>`).join('')+'</div>';document.body.append(dialog);$('.close',dialog).onclick=()=>dialog.close();
+ function refreshGridForm(d){ensureGrid(d);const section=$('[data-grid-deck="'+d.id+'"]',dialog);$('[data-bpm]',section).value=d.baseBpm.toFixed(2);$('[data-offset]',section).value=(d.gridOffset||0).toFixed(3);$('[data-state]',section).textContent=d.gridManual?'EDITED':'AUTO'}
+ $('.grid-edit',center).onclick=()=>{decks.forEach(refreshGridForm);dialog.showModal()};
+ for(const d of decks){const section=$('[data-grid-deck="'+d.id+'"]',dialog);let taps=[];
+  function apply(){if(!d.buffer)return toast('请先载入 '+d.id+' 碟');const bpm=+$('[data-bpm]',section).value,offset=+$('[data-offset]',section).value;if(!Number.isFinite(bpm)||bpm<40||bpm>240||!Number.isFinite(offset)||Math.abs(offset)>d.duration)return toast('请检查 BPM 和第一拍位置');d.baseBpm=bpm;d.gridOffset=offset;d.gridManual=true;d.gridTempo=bpm;d.setRate(d.rate);refreshGridForm(d)}
+  $('[data-apply]',section).onclick=apply;
+  $$('[data-shift]',section).forEach(b=>b.onclick=()=>{$('[data-offset]',section).value=(+$('[data-offset]',section).value+Number(b.dataset.shift)).toFixed(3);apply()});
+  $('[data-first]',section).onclick=()=>{$('[data-offset]',section).value=position(d).toFixed(3);apply()};
+  $('[data-auto]',section).onclick=()=>{d.gridManual=false;d.gridTempo=null;ensureGrid(d);refreshGridForm(d)};
+  $('[data-tap]',section).onclick=()=>{const now=performance.now();if(taps.length&&now-taps[taps.length-1]>2000)taps=[];taps.push(now);if(taps.length>7)taps.shift();if(taps.length>2){const bpm=60000/((now-taps[0])/(taps.length-1));if(bpm>=40&&bpm<=240){$('[data-bpm]',section).value=bpm.toFixed(2);apply()}}};
+ }
+ function draw(now){requestAnimationFrame(draw);if(now-lastFrame<15||document.hidden)return;lastFrame=now;const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;const ratio=Math.min(devicePixelRatio||1,2),w=r.width,h=r.height;if(canvas.width!==Math.round(w*ratio)||canvas.height!==Math.round(h*ratio)){canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio)}g.setTransform(ratio,0,0,ratio,0,0);g.clearRect(0,0,w,h);g.fillStyle='#030711';g.fillRect(0,0,w,h);const cursor=h*.48,scale=pixelScale(),lane=w/2;
+  for(const d of decks){ensureGrid(d);const x=d.index*lane,mid=x+lane/2,p=position(d,now),color=d.index?'#b487ff':'#37e8ff';g.fillStyle=d.index?'#190e292b':'#0724342b';g.fillRect(x,0,lane,h);if(!d.buffer){g.fillStyle=color;g.font='10px Orbitron, monospace';g.fillText('LOAD '+d.id,x+14,34);continue}
+   const arrays=d.alignArrays||[],sr=d.alignRate||48000,max=lane*.43;const fill=g.createLinearGradient(x,0,x+lane,0);fill.addColorStop(0,d.index?'#6731b9':'#12589a');fill.addColorStop(.45,color);fill.addColorStop(.55,'#d8f6ff');fill.addColorStop(1,d.index?'#ef55a9':'#257ebf');g.fillStyle=fill;
+   for(let y=0;y<h;y+=2){const t=p+(cursor-y)/scale*d.rate;if(t<0||t>=d.duration)continue;const j=Math.floor(t*sr),span=Math.max(8,Math.ceil(2/scale*d.rate*sr));let peak=0;for(let k=0;k<12;k++){const at=j+Math.floor(k*span/12);let sample=0;for(const a of arrays)sample+=a[at]||0;peak=Math.max(peak,Math.abs(sample))}const width=Math.min(max,Math.sqrt(peak)*max);g.globalAlpha=.82;g.fillRect(mid-width,y,Math.max(1,width*2),1.5)}g.globalAlpha=1;
+   const beat=60/d.baseBpm,offset=d.gridOffset||0,first=Math.floor((p-(h-cursor)/scale*d.rate-offset)/beat)-1,last=Math.ceil((p+cursor/scale*d.rate-offset)/beat)+1;
+   for(let n=first;n<=last;n++){const t=offset+n*beat,y=cursor-(t-p)/d.rate*scale;if(y<0||y>h)continue;const strong=mod(n,4)===0;g.strokeStyle=strong?'#ffe69cba':'#b7cee54b';g.lineWidth=strong?1.4:.6;g.beginPath();g.moveTo(x+3,y);g.lineTo(x+lane-3,y);g.stroke();g.fillStyle=strong?'#ffe5a4':'#8dacc4';g.font=(strong?'9':'7')+'px Orbitron, monospace';const bar=Math.floor(n/4)+1,label=bar+'.'+(mod(n,4)+1);g.fillText(label,x+5,y-4)}
+   for(const [i,cue]of d.cues.entries()){if(cue===null)continue;const y=cursor-(cue-p)/d.rate*scale;if(y<0||y>h)continue;g.fillStyle='#ffb36f';g.fillRect(x+lane-8,y-3,7,6);g.font='8px monospace';g.fillText(String(i+1),x+lane-18,y-4)}
+   const number=Math.floor((p-offset)/beat);$('[data-lane="'+d.id+'"]',center).textContent=(Math.floor(number/4)+1)+'.'+(mod(number,4)+1);g.fillStyle=color;g.font='10px Orbitron, monospace';g.fillText(d.id+' '+(d.gridManual?'EDIT':'AUTO'),x+8,14);
+  }
+  g.fillStyle='#8492b455';g.fillRect(lane-.5,0,1,h);g.fillStyle='#ffffffdf';g.fillRect(0,cursor-1,w,2);g.fillStyle='#05101c';g.fillRect(lane-14,cursor-7,28,14);g.fillStyle='#eaf7ff';g.font='8px Orbitron, monospace';g.fillText('NOW',lane-11,cursor+3);
+  if(decks.every(d=>d.buffer)){const delta=mod(phaseOf(decks[1],now)-phaseOf(decks[0],now)+.5,1)-.5,master=decks.find(d=>d.id===masterDeck),ms=delta*60/master.bpm*1000;$('strong',phase).textContent=(ms>0?'+':'')+Math.round(ms)+' ms';phase.classList.toggle('aligned',Math.abs(ms)<20);$('small',phase).textContent='A '+$('.lane-beat[data-lane=A]',center).textContent+' / B '+$('.lane-beat[data-lane=B]',center).textContent}
+ }
+ requestAnimationFrame(draw);
+ window.nightmixBeatDiagnostics=()=>({workspace,master:masterDeck,viewBeats,decks:decks.map(d=>{ensureGrid(d);return {deck:d.id,bpm:d.baseBpm,effectiveBpm:d.bpm*(1+(d.bend||0)),offset:d.gridOffset||0,manual:!!d.gridManual,phase:phaseOf(d,performance.now()),position:position(d),bend:d.bend||0}})});
+ return {sync,onTrackLoaded,onTempoChanged};
+}
