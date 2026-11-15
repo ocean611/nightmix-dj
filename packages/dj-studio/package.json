@@ -1,0 +1,8 @@
+{
+  "name": "nightmix-dj-studio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:tempo": "node qa/tempo-benchmark.mjs && node qa/tempo-holdout.mjs"
+  }
+}
